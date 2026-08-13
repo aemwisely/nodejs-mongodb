@@ -3,6 +3,7 @@ import http from "node:http";
 import { app } from "./app";
 import { disconnectDatabase, connectDatabase } from "./config/database";
 import { env } from "./config/env";
+import { initializeDatabase } from "./database";
 
 let server: http.Server | undefined;
 let isShuttingDown = false;
@@ -10,6 +11,12 @@ let isShuttingDown = false;
 const startDatabase = async (): Promise<void> => {
   try {
     await connectDatabase();
+
+    if (env.AUTO_INIT_DATABASE) {
+      await initializeDatabase();
+      console.log("MongoDB collections initialized");
+    }
+
     console.log("MongoDB connected");
   } catch (error) {
     console.error("MongoDB connection failed", error);
