@@ -1,1 +1,2 @@
-export * from "./interceptors";
+export * from './interceptors';
+export * from './shared';

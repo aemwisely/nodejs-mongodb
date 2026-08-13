@@ -1,6 +1,5 @@
 import express, { type Request, type Response } from 'express';
-import { transformInterceptor } from './common';
-import { corsOptions } from './common/shared/cors-option';
+import { corsOptions, transformInterceptor } from './common';
 import cors from 'cors';
 
 export const app = express();
