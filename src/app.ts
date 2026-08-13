@@ -13,6 +13,7 @@ app.use(cors(corsOptions));
 setupSwagger(app, {
   serverName: 'Example API',
   description: 'This is an example API documentation',
+  docsPath: `/${appConfig.prefix}/docs`,
 });
 
 app.use(`/${appConfig.prefix}`, apiRoutes);

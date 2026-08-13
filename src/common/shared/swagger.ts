@@ -2,35 +2,13 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
 
-const options: swaggerJsdoc.Options = {
-  definition: {
-    info: {
-      title: 'Example API',
-      version: '1.0.0',
-      description: 'ExpressJS API Documentation',
-    },
-    servers: [
-      {
-        url: 'http://localhost:4000/api/v1',
-        description: 'Development Server',
-      },
-    ],
-    // components: {
-    //   securitySchemes: {
-    //     bearerAuth: {
-    //       type: 'http',
-    //       scheme: 'bearer',
-    //       bearerFormat: 'JWT',
-    //     },
-    //   },
-    // },
-  },
+interface SwaggerSetupOptions {
+  serverName: string;
+  description: string;
+  docsPath?: string;
+}
 
-  // path ที่ Swagger จะ scan comment
-  apis: ['./src/routes/*.ts', './src/controllers/*.ts'],
-};
-
-const swaggerSpec = (option: { serverName: string; description: string }) => {
+const swaggerSpec = (option: SwaggerSetupOptions) => {
   const options: swaggerJsdoc.Options = {
     definition: {
       info: {
@@ -62,9 +40,12 @@ const swaggerSpec = (option: { serverName: string; description: string }) => {
   return swaggerJsdoc(options);
 };
 
-export const setupSwagger = (app: Express, option: { serverName: string; description: string }) => {
+export const setupSwagger = (app: Express, option: SwaggerSetupOptions) => {
+  const docsPath = option.docsPath ?? '/docs';
+  const docsJsonPath = `${docsPath.replace(/\/$/, '')}-json`;
+
   app.use(
-    '/docs',
+    docsPath,
     swaggerUi.serve,
     swaggerUi.setup(swaggerSpec(option), {
       explorer: true,
@@ -72,7 +53,7 @@ export const setupSwagger = (app: Express, option: { serverName: string; descrip
   );
 
   // OpenAPI JSON
-  app.get('/docs-json', (_, res) => {
+  app.get(docsJsonPath, (_, res) => {
     res.json(swaggerSpec(option));
   });
 };
