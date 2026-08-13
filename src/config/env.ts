@@ -3,15 +3,28 @@ import { z } from "zod";
 
 dotenv.config();
 
+const emptyStringToUndefined = (value: unknown): unknown =>
+  value === "" ? undefined : value;
+
 const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
   PORT: z.coerce.number().int().positive().max(65535).default(3000),
-  MONGODB_URI: z
-    .string()
-    .min(1, "MONGODB_URI is required")
-    .default("mongodb://127.0.0.1:27017/nodejs")
+  MONGODB_HOST: z.string().min(1, "MONGODB_HOST is required").default("127.0.0.1"),
+  MONGODB_PORT: z.coerce.number().int().positive().max(65535).default(27017),
+  MONGODB_DATABASE: z.string().min(1, "MONGODB_DATABASE is required").default("nodejs"),
+  MONGODB_USERNAME: z.preprocess(emptyStringToUndefined, z.string().optional()),
+  MONGODB_PASSWORD: z.preprocess(emptyStringToUndefined, z.string().optional()),
+  MONGODB_AUTH_SOURCE: z.string().min(1).default("admin")
+}).superRefine((value, context) => {
+  if (Boolean(value.MONGODB_USERNAME) !== Boolean(value.MONGODB_PASSWORD)) {
+    context.addIssue({
+      code: "custom",
+      message: "MONGODB_USERNAME and MONGODB_PASSWORD must be provided together",
+      path: ["MONGODB_USERNAME"]
+    });
+  }
 });
 
 export const env = envSchema.parse(process.env);
