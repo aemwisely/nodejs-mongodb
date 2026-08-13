@@ -9,6 +9,7 @@ export class WorkEventsController {
   createWorkEvent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const dto = this.toCreateWorkEventInput(req.body);
+
       const workEvent = await this.workEventService.createWorkEvent(dto);
 
       res.status(201).json(workEvent);

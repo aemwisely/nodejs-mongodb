@@ -7,7 +7,8 @@ export class WorkEventService extends AbstractWorkEventService {
     super();
   }
 
-  createWorkEvent(dto: CreateWorkEventInput) {
-    return this.workEventRepository.create(dto);
+  async createWorkEvent(dto: CreateWorkEventInput) {
+    const entity = await this.workEventRepository.create(dto);
+    return entity;
   }
 }

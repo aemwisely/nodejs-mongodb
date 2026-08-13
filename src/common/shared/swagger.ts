@@ -1,6 +1,7 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
+import { bodySchemas } from '../../docs';
 
 interface SwaggerSetupOptions {
   serverName: string;
@@ -11,6 +12,7 @@ interface SwaggerSetupOptions {
 const swaggerSpec = (option: SwaggerSetupOptions) => {
   const options: swaggerJsdoc.Options = {
     definition: {
+      openapi: '3.0.0',
       info: {
         title: option.serverName,
         version: '1.0.0',
@@ -18,23 +20,19 @@ const swaggerSpec = (option: SwaggerSetupOptions) => {
       },
       servers: [
         {
-          url: 'http://localhost:4000/api/v1',
+          url: 'http://localhost:4000',
           description: 'Development Server',
         },
       ],
-      // components: {
-      //   securitySchemes: {
-      //     bearerAuth: {
-      //       type: 'http',
-      //       scheme: 'bearer',
-      //       bearerFormat: 'JWT',
-      //     },
-      //   },
-      // },
+      components: {
+        schemas: {
+          ...bodySchemas,
+        },
+      },
     },
 
     // path ที่ Swagger จะ scan comment
-    apis: ['./src/routes/*.ts', './src/controllers/*.ts'],
+    apis: ['./dist/src/routes/**/*.js', './dist/src/modules/**/*.js'],
   };
 
   return swaggerJsdoc(options);
