@@ -1,0 +1,15 @@
+import type { CreateWorkEventInput } from '../application/dto/create-work-event.dto';
+import type { ListWorkEventsQuery } from '../application/dto/list-work-events-query.dto';
+import type { WorkEventEntity } from './work-event.entity';
+
+export interface WorkEventSummary {
+  totalCapacity: number;
+  totalRegistered: number;
+  totalRemaining: number;
+}
+
+export interface WorkEventRepository {
+  create(input: CreateWorkEventInput): Promise<WorkEventEntity>;
+  findMany(query: ListWorkEventsQuery): Promise<WorkEventEntity[]>;
+  getSummary(): Promise<WorkEventSummary>;
+}
