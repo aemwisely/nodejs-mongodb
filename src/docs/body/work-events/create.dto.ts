@@ -4,15 +4,15 @@ export const CreateWorkEventBody = {
   properties: {
     title: {
       type: 'string',
-      example: 'Backend Developer Registration',
+      example: 'string',
     },
     description: {
       type: 'string',
-      example: 'Registration round for backend developer test',
+      example: 'string',
     },
     capacity: {
       type: 'integer',
-      example: 10,
+      example: 0,
     },
     isActive: {
       type: 'boolean',
