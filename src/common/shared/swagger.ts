@@ -7,6 +7,7 @@ interface SwaggerSetupOptions {
   serverName: string;
   description: string;
   docsPath?: string;
+  serverUrl: string;
 }
 
 const swaggerSpec = (option: SwaggerSetupOptions) => {
@@ -20,7 +21,7 @@ const swaggerSpec = (option: SwaggerSetupOptions) => {
       },
       servers: [
         {
-          url: 'http://localhost:4000',
+          url: option.serverUrl,
           description: 'Development Server',
         },
       ],
