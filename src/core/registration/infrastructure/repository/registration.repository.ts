@@ -1,9 +1,12 @@
-import { BadRequestException, NotFoundException } from '../../../../common';
 import { User, UserEvent, type UserEventDocument, WorkEvent } from '../../../../database';
-import { isValidObjectId, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import type { RegisterEventInput } from '../../application/dto/register-event.dto';
 import { RegistrationEntity } from '../../domain/registration.entity';
-import type { RegistrationRepository } from '../../domain/registration.repository';
+import type {
+  RegistrationEventRecord,
+  RegistrationRepository,
+  RegistrationUserRecord,
+} from '../../domain/registration.repository';
 
 type UserEventPersistenceDocument = UserEventDocument & {
   _id: { toString(): string };
@@ -21,60 +24,49 @@ const toEntity = (document: UserEventPersistenceDocument): RegistrationEntity =>
   });
 
 export class MongooseRegistrationRepository implements RegistrationRepository {
-  async registerEvent(dto: RegisterEventInput): Promise<RegistrationEntity> {
-    this.validateInput(dto);
-
-    const eventObjectId = new Types.ObjectId(dto.eventId);
-    const event = await WorkEvent.findById(eventObjectId).exec();
+  async findEventById(eventId: string): Promise<RegistrationEventRecord | null> {
+    const event = await WorkEvent.findById(new Types.ObjectId(eventId)).exec();
 
     if (!event) {
-      throw new NotFoundException({
-        error_code: 'WORK_EVENT_NOT_FOUND',
-        error_message: 'Work event not found',
-      });
+      return null;
     }
 
-    if (!event.isActive) {
-      throw new BadRequestException({
-        error_code: 'WORK_EVENT_INACTIVE',
-        error_message: 'Work event is inactive',
-      });
-    }
+    return {
+      id: event._id.toString(),
+      isActive: event.isActive,
+    };
+  }
 
-    const user = await User.findOneAndUpdate(
-      { phone_number: dto.user.phoneNumber },
+  async findOrCreateUserByPhoneNumber(user: RegisterEventInput['user']): Promise<RegistrationUserRecord> {
+    const document = await User.findOneAndUpdate(
+      { phone_number: user.phoneNumber },
       {
         $setOnInsert: {
-          first_name: dto.user.firstName,
-          last_name: dto.user.lastName,
-          phone_number: dto.user.phoneNumber,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          phone_number: user.phoneNumber,
           is_active: true,
         },
       },
       { new: true, upsert: true },
     ).exec();
 
-    let userEventDocument: UserEventPersistenceDocument;
+    return { id: document._id.toString() };
+  }
 
-    try {
-      userEventDocument = await UserEvent.create({
-        user_id: user._id,
-        event_id: eventObjectId,
-      });
-    } catch (error) {
-      if (this.isDuplicateUserEventError(error)) {
-        throw new BadRequestException({
-          error_code: 'USER_ALREADY_REGISTERED',
-          error_message: 'User already registered this event',
-        });
-      }
+  async createRegistration(input: { userId: string; eventId: string }): Promise<RegistrationEntity> {
+    const document = await UserEvent.create({
+      user_id: new Types.ObjectId(input.userId),
+      event_id: new Types.ObjectId(input.eventId),
+    });
 
-      throw error;
-    }
+    return toEntity(document);
+  }
 
+  async incrementRegisteredCountIfAvailable(eventId: string): Promise<boolean> {
     const updatedEvent = await WorkEvent.findOneAndUpdate(
       {
-        _id: eventObjectId,
+        _id: new Types.ObjectId(eventId),
         is_active: true,
         $expr: { $lt: ['$registered_count', '$capacity'] },
       },
@@ -82,35 +74,14 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
       { new: true },
     ).exec();
 
-    if (!updatedEvent) {
-      await UserEvent.deleteOne({ _id: userEventDocument._id }).exec();
-
-      throw new BadRequestException({
-        error_code: 'WORK_EVENT_FULL',
-        error_message: 'Work event is full',
-      });
-    }
-
-    return toEntity(userEventDocument);
+    return !!updatedEvent;
   }
 
-  private validateInput(dto: RegisterEventInput): void {
-    if (!isValidObjectId(dto.eventId)) {
-      throw new BadRequestException({
-        error_code: 'INVALID_EVENT_ID',
-        error_message: 'Event id is invalid',
-      });
-    }
-
-    if (!dto.user.firstName.trim() || !dto.user.lastName.trim() || !dto.user.phoneNumber.trim()) {
-      throw new BadRequestException({
-        error_code: 'INVALID_REGISTER_EVENT_BODY',
-        error_message: 'User first name, last name, and phone number are required',
-      });
-    }
+  async deleteRegistrationById(registrationId: string): Promise<void> {
+    await UserEvent.deleteOne({ _id: new Types.ObjectId(registrationId) }).exec();
   }
 
-  private isDuplicateUserEventError(error: unknown): boolean {
+  isDuplicateRegistrationError(error: unknown): boolean {
     return !!error && typeof error === 'object' && 'code' in error && (error as { code: unknown }).code === 11000;
   }
 }
