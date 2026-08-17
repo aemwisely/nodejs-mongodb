@@ -4,8 +4,8 @@ export interface RegistrationProps {
   updatedAt: Date;
   userId: string;
   eventId: string;
-  checkinAt: Date;
-  checkoutAt: Date;
+  checkinAt?: Date | null;
+  checkoutAt?: Date | null;
 }
 
 export interface RegistrationResponse {
@@ -14,8 +14,8 @@ export interface RegistrationResponse {
   updated_at: Date;
   user_id: string;
   event_id: string;
-  checkin_at: Date;
-  checkout_at: Date;
+  checkin_at?: Date | null;
+  checkout_at?: Date | null;
 }
 
 export class RegistrationEntity {
@@ -37,11 +37,11 @@ export class RegistrationEntity {
     return this.props.eventId;
   }
 
-  get checkinAt(): Date {
+  get checkinAt(): Date | null | undefined {
     return this.props.checkinAt;
   }
 
-  get checkoutAt(): Date {
+  get checkoutAt(): Date | null | undefined {
     return this.props.checkoutAt;
   }
 
