@@ -4,6 +4,14 @@ export interface CommonFilterOptions {
   pagination?: boolean;
 }
 
+export interface PaginatedResult<T> {
+  result: T[];
+  count: number;
+  page: number;
+  limit: number;
+  page_count: number;
+}
+
 export class CommonFilter {
   page = 1;
   limit = 10;
@@ -25,6 +33,16 @@ export class CommonFilter {
 
   getPageCount(limit: number, total: number): number {
     return Math.ceil(total / limit);
+  }
+
+  toPaginatedResult<T>(data: T[], count: number): PaginatedResult<T> {
+    return {
+      result: data,
+      count,
+      page: this.page,
+      limit: this.limit,
+      page_count: this.getPageCount(this.limit, count),
+    };
   }
 
   private toPositiveNumber(value: number | undefined, defaultValue: number): number {
