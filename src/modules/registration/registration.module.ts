@@ -10,11 +10,17 @@ export const createRegistrationRouter = (): Router => {
 
   /**
    * @swagger
-   * /api/v1/registrations:
+   * /api/v1/registrations/{eventId}:
    *   post:
    *     summary: Register user to work event
    *     tags:
    *       - Registrations
+   *     parameters:
+   *       - in: path
+   *         name: eventId
+   *         required: true
+   *         schema:
+   *           type: string
    *     requestBody:
    *       required: true
    *       content:
@@ -22,29 +28,21 @@ export const createRegistrationRouter = (): Router => {
    *           schema:
    *             type: object
    *             required:
-   *               - event_id
-   *               - user
+   *               - first_name
+   *               - last_name
+   *               - phone_number
    *             properties:
-   *               event_id:
+   *               first_name:
    *                 type: string
-   *               user:
-   *                 type: object
-   *                 required:
-   *                   - first_name
-   *                   - last_name
-   *                   - phone_number
-   *                 properties:
-   *                   first_name:
-   *                     type: string
-   *                   last_name:
-   *                     type: string
-   *                   phone_number:
-   *                     type: string
+   *               last_name:
+   *                 type: string
+   *               phone_number:
+   *                 type: string
    *     responses:
    *       201:
    *         description: User registered to event
    */
-  router.post('/', controller.registerEvent);
+  router.post('/:eventId', controller.registerEvent);
 
   return router;
 };
