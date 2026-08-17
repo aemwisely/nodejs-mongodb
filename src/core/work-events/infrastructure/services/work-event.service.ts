@@ -19,6 +19,10 @@ export class WorkEventService extends AbstractWorkEventService {
     return this.workEventRepository.findManyAndCount(this.queryBuilder(query));
   }
 
+  async findById(id: string): Promise<WorkEventEntity | null> {
+    return this.workEventRepository.findById(id);
+  }
+
   private queryBuilder(query: ListWorkEventsQuery): ListWorkEventsQuery {
     const title = query.title?.trim();
     const filter = new CommonFilter(query);

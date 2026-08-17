@@ -47,6 +47,27 @@ export const createWorkEventsRouter = (): Router => {
 
   /**
    * @swagger
+   * /api/v1/work-events/{id}:
+   *   get:
+   *     summary: Get work event by id
+   *     tags:
+   *       - Work Events
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Work event detail
+   *       404:
+   *         description: Work event not found
+   */
+  router.get('/:id', controller.findById);
+
+  /**
+   * @swagger
    * /api/v1/work-events:
    *   post:
    *     summary: Create work event

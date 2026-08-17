@@ -1,5 +1,5 @@
 import { CommonFilter } from '../../../../common';
-import type { SortOrder } from 'mongoose';
+import { isValidObjectId, type SortOrder } from 'mongoose';
 
 import { WorkEvent, type WorkEventDocument } from '../../../../database/model';
 import type { CreateWorkEventInput } from '../../application/dto/create-work-event.dto';
@@ -68,6 +68,16 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
     ]);
 
     return [documents.map((document) => toEntity(document)), total];
+  }
+
+  async findById(id: string): Promise<WorkEventEntity | null> {
+    if (!isValidObjectId(id)) {
+      return null;
+    }
+
+    const document = await WorkEvent.findById(id).exec();
+
+    return document ? toEntity(document) : null;
   }
 
   private buildQuery(query: ListWorkEventsQuery): {

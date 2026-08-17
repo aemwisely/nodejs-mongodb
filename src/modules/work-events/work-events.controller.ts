@@ -13,7 +13,7 @@ export class WorkEventsController {
 
       const workEvent = await this.workEventService.createWorkEvent(dto);
 
-      res.status(201).json(workEvent);
+      res.status(201).json({ result: workEvent });
     } catch (error) {
       next(error);
     }
@@ -26,6 +26,22 @@ export class WorkEventsController {
       const response = new CommonFilter(query).toPaginatedResult(data, count);
 
       res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  findById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const workEvent = await this.workEventService.findById(id);
+
+      if (!workEvent) {
+        res.status(404).json({ result: null });
+        return;
+      }
+
+      res.status(200).json({ result: workEvent });
     } catch (error) {
       next(error);
     }
