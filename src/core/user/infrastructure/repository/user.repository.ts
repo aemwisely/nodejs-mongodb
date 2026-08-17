@@ -38,8 +38,8 @@ export class MongooseUserRepository implements UserRepository {
     } catch (error) {
       if (this.isDuplicatePhoneNumberError(error)) {
         throw new BadRequestException({
-          error_code: 'USER_PHONE_NUMBER_DUPLICATED',
-          error_message: 'Phone number already exists',
+          error_code: 'DUPLCIATED',
+          error_message: 'User already exists',
         });
       }
 
@@ -55,10 +55,7 @@ export class MongooseUserRepository implements UserRepository {
       documentsQuery.skip(offset).limit(limit);
     }
 
-    const [documents, total] = await Promise.all([
-      documentsQuery.exec(),
-      User.countDocuments(filter).exec(),
-    ]);
+    const [documents, total] = await Promise.all([documentsQuery.exec(), User.countDocuments(filter).exec()]);
 
     return [documents.map((document) => toEntity(document)), total];
   }
