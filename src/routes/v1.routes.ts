@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 
-import { createWorkEventsRouter } from '../modules';
+import { createUsersRouter, createWorkEventsRouter } from '../modules';
 
 const router = Router();
 
@@ -9,5 +9,6 @@ router.get('/health', (_req: Request, res: Response) => {
 });
 
 router.use('/work-events', createWorkEventsRouter());
+router.use('/users', createUsersRouter());
 
 export const v1Routes = router;

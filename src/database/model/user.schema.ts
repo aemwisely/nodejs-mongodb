@@ -1,6 +1,12 @@
 import { model, Schema } from 'mongoose';
 
 export interface UserDocument {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
   first_name: string;
   last_name: string;
   phone_number: string;
@@ -11,9 +17,9 @@ export interface UserDocument {
 
 const userSchema = new Schema<UserDocument>(
   {
-    first_name: { type: String, required: true, trim: true },
-    last_name: { type: String, required: true, trim: true },
-    phone_number: { type: String, required: true, trim: true, unique: true },
+    first_name: { type: String, required: true, trim: true, alias: 'firstName' },
+    last_name: { type: String, required: true, trim: true, alias: 'lastName' },
+    phone_number: { type: String, required: true, trim: true, unique: true, alias: 'phoneNumber' },
     is_active: { type: Boolean, required: true, default: true, alias: 'isActive' },
   },
   {
