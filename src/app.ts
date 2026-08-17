@@ -1,5 +1,5 @@
 import express from 'express';
-import { corsOptions, setupSwagger, transformInterceptor } from './common';
+import { allExceptionsFilter, corsOptions, NotFoundException, setupSwagger, transformInterceptor } from './common';
 import { appConfig, getAppUrl } from './config/app.config';
 import { apiRoutes } from './routes';
 import cors from 'cors';
@@ -24,3 +24,12 @@ setupSwagger(app, {
 });
 
 app.use(`/${appConfig.prefix}`, apiRoutes);
+app.use((request, _response, next) => {
+  next(
+    new NotFoundException({
+      error_code: 'ROUTE_NOT_FOUND',
+      error_message: `Cannot ${request.method} ${request.url}`,
+    }),
+  );
+});
+app.use(allExceptionsFilter);

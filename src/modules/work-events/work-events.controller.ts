@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { CommonFilter } from '../../common';
+import { CommonFilter, NotFoundException } from '../../common';
 import { AbstractWorkEventService } from '../../core/work-events';
 import { BuildListWorkEventsQuery, BuildWorkEventInput } from '../../core/work-events/domain';
 
@@ -37,8 +37,10 @@ export class WorkEventsController {
       const workEvent = await this.workEventService.findById(id);
 
       if (!workEvent) {
-        res.status(404).json({ result: null });
-        return;
+        throw new NotFoundException({
+          error_code: 'WORK_EVENT_NOT_FOUND',
+          error_message: 'Work event not found',
+        });
       }
 
       res.status(200).json({ result: workEvent });
