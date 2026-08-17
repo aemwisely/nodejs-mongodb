@@ -63,14 +63,25 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
     return toEntity(document);
   }
 
-  async incrementRegisteredCountIfAvailable(eventId: string): Promise<boolean> {
+  async reserveSeatIfAvailable(eventId: string): Promise<boolean> {
     const updatedEvent = await WorkEvent.findOneAndUpdate(
       {
         _id: new Types.ObjectId(eventId),
         is_active: true,
         $expr: { $lt: ['$registered_count', '$capacity'] },
       },
-      { $inc: { registered_count: 1 } },
+      [
+        {
+          $set: {
+            registered_count: { $add: ['$registered_count', 1] },
+          },
+        },
+        {
+          $set: {
+            is_active: { $lt: ['$registered_count', '$capacity'] },
+          },
+        },
+      ],
       { new: true },
     ).exec();
 

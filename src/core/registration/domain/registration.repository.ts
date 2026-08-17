@@ -14,7 +14,7 @@ export interface RegistrationRepository {
   findEventById(eventId: string): Promise<RegistrationEventRecord | null>;
   findOrCreateUserByPhoneNumber(user: RegisterEventInput['user']): Promise<RegistrationUserRecord>;
   createRegistration(input: { userId: string; eventId: string }): Promise<RegistrationEntity>;
-  incrementRegisteredCountIfAvailable(eventId: string): Promise<boolean>;
+  reserveSeatIfAvailable(eventId: string): Promise<boolean>;
   deleteRegistrationById(registrationId: string): Promise<void>;
   isDuplicateRegistrationError(error: unknown): boolean;
 }

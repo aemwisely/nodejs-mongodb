@@ -31,7 +31,7 @@ export class RegistrationService extends AbstractRegistrationService {
 
     const user = await this.registrationRepository.findOrCreateUserByPhoneNumber(dto.user);
     const registration = await this.createRegistration(user.id, event.id);
-    const canReserveSeat = await this.registrationRepository.incrementRegisteredCountIfAvailable(event.id);
+    const canReserveSeat = await this.registrationRepository.reserveSeatIfAvailable(event.id);
 
     if (!canReserveSeat) {
       await this.registrationRepository.deleteRegistrationById(registration.id);
