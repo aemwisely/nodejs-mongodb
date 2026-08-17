@@ -1,3 +1,4 @@
+import { CommonFilter } from '../../../../common';
 import type { CreateWorkEventInput } from '../../application/dto/create-work-event.dto';
 import type { ListWorkEventsQuery } from '../../application/dto/list-work-events-query.dto';
 import { AbstractWorkEventService } from '../../application/services/work-event.service.abstract';
@@ -20,14 +21,16 @@ export class WorkEventService extends AbstractWorkEventService {
 
   private queryBuilder(query: ListWorkEventsQuery): ListWorkEventsQuery {
     const title = query.title?.trim();
+    const filter = new CommonFilter(query);
 
     return {
       ...(title ? { title } : {}),
       ...(typeof query.isActive === 'boolean' ? { isActive: query.isActive } : {}),
       sortBy: query.sortBy,
       sortDirection: query.sortDirection,
-      limit: query.limit,
-      offset: query.offset,
+      page: filter.page,
+      limit: filter.limit,
+      pagination: filter.pagination,
     };
   }
 }

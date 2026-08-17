@@ -2,11 +2,25 @@ export interface WorkEventProps {
   id: string;
   title: string;
   description?: string;
+  type: string;
   capacity: number;
   registeredCount: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface WorkEventResponse {
+  id: string;
+  title: string;
+  description?: string;
+  type: string;
+  capacity: number;
+  registered_count: number;
+  remaining_count: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export class WorkEventEntity {
@@ -26,6 +40,10 @@ export class WorkEventEntity {
 
   get description(): string | undefined {
     return this.props.description;
+  }
+
+  get type(): string {
+    return this.props.type;
   }
 
   get capacity(): number {
@@ -52,10 +70,18 @@ export class WorkEventEntity {
     return this.props.updatedAt;
   }
 
-  toJSON(): WorkEventProps & { remainingCount: number } {
+  toJSON(): WorkEventResponse {
     return {
-      ...this.props,
-      remainingCount: this.remainingCount,
+      id: this.id,
+      title: this.title,
+      description: this.description,
+      type: this.type,
+      capacity: this.capacity,
+      registered_count: this.registeredCount,
+      remaining_count: this.remainingCount,
+      is_active: this.isActive,
+      created_at: this.createdAt,
+      updated_at: this.updatedAt,
     };
   }
 }

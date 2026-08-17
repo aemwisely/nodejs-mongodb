@@ -5,6 +5,10 @@ export interface WorkEventDocument {
   description?: string | null;
   type: string;
   capacity: number;
+  registeredCount: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
   registered_count: number;
   is_active: boolean;
   created_at: Date;
@@ -17,8 +21,8 @@ const workEventSchema = new Schema<WorkEventDocument>(
     description: { type: String, required: false, trim: true },
     capacity: { type: Number, required: true, min: 0 },
     type: { type: String, required: true, trim: true },
-    registered_count: { type: Number, required: true, default: 0, min: 0 },
-    is_active: { type: Boolean, required: true, default: true },
+    registered_count: { type: Number, required: true, default: 0, min: 0, alias: 'registeredCount' },
+    is_active: { type: Boolean, required: true, default: true, alias: 'isActive' },
   },
   {
     collection: 'work_events',
@@ -28,5 +32,13 @@ const workEventSchema = new Schema<WorkEventDocument>(
     },
   },
 );
+
+workEventSchema.virtual('createdAt').get(function getCreatedAt() {
+  return this.created_at;
+});
+
+workEventSchema.virtual('updatedAt').get(function getUpdatedAt() {
+  return this.updated_at;
+});
 
 export const WorkEvent = model<WorkEventDocument>('WorkEvent', workEventSchema);

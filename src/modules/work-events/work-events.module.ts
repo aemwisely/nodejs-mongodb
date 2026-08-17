@@ -24,6 +24,21 @@ export const createWorkEventsRouter = (): Router => {
    *         name: isActive
    *         schema:
    *           type: boolean
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: number
+   *           default: 1
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: number
+   *           default: 10
+   *       - in: query
+   *         name: pagination
+   *         schema:
+   *           type: boolean
+   *           default: true
    *     responses:
    *       200:
    *         description: Work event list

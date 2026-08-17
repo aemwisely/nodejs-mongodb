@@ -1,3 +1,4 @@
+import { CommonFilter } from '../../../../common';
 import type { SortOrder } from 'mongoose';
 
 import { WorkEvent, type WorkEventDocument } from '../../../../database/model';
@@ -17,11 +18,12 @@ const toEntity = (document: WorkEventPersistenceDocument): WorkEventEntity =>
     id: document._id.toString(),
     title: document.title,
     description: document.description ?? undefined,
+    type: document.type,
     capacity: document.capacity,
-    registeredCount: document.registered_count ?? 0,
-    isActive: document.is_active,
-    createdAt: document.created_at,
-    updatedAt: document.updated_at,
+    registeredCount: document.registeredCount ?? 0,
+    isActive: document.isActive,
+    createdAt: document.createdAt,
+    updatedAt: document.updatedAt,
   });
 
 export class MongooseWorkEventRepository implements WorkEventRepository {
@@ -31,30 +33,37 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
       description: input.description,
       type: input.type,
       capacity: input.capacity,
-      registered_count: 0,
-      is_active: input.isActive ?? true,
+      registeredCount: 0,
+      isActive: input.isActive ?? true,
     });
 
     return toEntity(document);
   }
 
   async findMany(query: ListWorkEventsQuery): Promise<WorkEventEntity[]> {
-    const { filter, sort, limit, offset } = this.buildQuery(query);
+    const { filter, sort, limit, offset, pagination } = this.buildQuery(query);
 
-    const documents = await WorkEvent.find(filter)
-      .sort(sort)
-      .skip(offset)
-      .limit(limit)
-      .exec();
+    const documentsQuery = WorkEvent.find(filter).sort(sort);
+
+    if (pagination) {
+      documentsQuery.skip(offset).limit(limit);
+    }
+
+    const documents = await documentsQuery.exec();
 
     return documents.map((document) => toEntity(document));
   }
 
   async findManyAndCount(query: ListWorkEventsQuery): Promise<[WorkEventEntity[], number]> {
-    const { filter, sort, limit, offset } = this.buildQuery(query);
+    const { filter, sort, limit, offset, pagination } = this.buildQuery(query);
+    const documentsQuery = WorkEvent.find(filter).sort(sort);
+
+    if (pagination) {
+      documentsQuery.skip(offset).limit(limit);
+    }
 
     const [documents, total] = await Promise.all([
-      WorkEvent.find(filter).sort(sort).skip(offset).limit(limit).exec(),
+      documentsQuery.exec(),
       WorkEvent.countDocuments(filter).exec(),
     ]);
 
@@ -66,8 +75,10 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
     sort: Record<string, SortOrder>;
     limit: number;
     offset: number;
+    pagination: boolean;
   } {
     const filter: Record<string, unknown> = {};
+    const commonFilter = new CommonFilter(query);
 
     if (typeof query.isActive === 'boolean') {
       filter.is_active = query.isActive;
@@ -86,14 +97,15 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
 
     const sortBy = query.sortBy ?? 'createdAt';
     const sortDirection: SortOrder = query.sortDirection === 'asc' ? 1 : -1;
-    const limit = Math.min(query.limit ?? 50, 100);
-    const offset = query.offset ?? 0;
+    const limit = Math.min(commonFilter.limit, 100);
+    const offset = commonFilter.getOffset({ page: commonFilter.page, limit });
 
     return {
       filter,
       sort: { [sortFieldMap[sortBy]]: sortDirection },
       limit,
       offset,
+      pagination: commonFilter.pagination,
     };
   }
 

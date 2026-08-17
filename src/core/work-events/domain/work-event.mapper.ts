@@ -1,3 +1,4 @@
+import { CommonFilter } from '../../../common';
 import type { CreateWorkEventInput } from '../application/dto/create-work-event.dto';
 import type { ListWorkEventsQuery, SortDirection, WorkEventSortBy } from '../application/dto/list-work-events-query.dto';
 
@@ -15,14 +16,20 @@ export function BuildWorkEventInput(body: unknown): CreateWorkEventInput {
 
 export function BuildListWorkEventsQuery(query: unknown): ListWorkEventsQuery {
   const payload = query as Record<string, unknown>;
+  const filter = new CommonFilter({
+    page: toOptionalNumber(payload.page),
+    limit: toOptionalNumber(payload.limit),
+    pagination: toOptionalBoolean(payload.pagination),
+  });
 
   return {
     title: toOptionalString(payload.title),
     isActive: toOptionalBoolean(payload.isActive),
     sortBy: toWorkEventSortBy(payload.sortBy),
     sortDirection: toSortDirection(payload.sortDirection),
-    limit: toOptionalNumber(payload.limit),
-    offset: toOptionalNumber(payload.offset),
+    page: filter.page,
+    limit: filter.limit,
+    pagination: filter.pagination,
   };
 }
 
