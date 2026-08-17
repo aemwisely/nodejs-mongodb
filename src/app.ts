@@ -20,7 +20,7 @@ setupSwagger(app, {
   serverName: 'Example API',
   description: 'This is an example API documentation',
   docsPath: `/${appConfig.prefix}/docs`,
-  serverUrl: `${app.getUrl()}/${appConfig.prefix}/v${appConfig.defaultVersion}`,
+  serverUrl: `${app.getUrl()}`,
 });
 
 app.use(`/${appConfig.prefix}`, apiRoutes);

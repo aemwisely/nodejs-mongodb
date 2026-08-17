@@ -27,6 +27,7 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
     const document = await WorkEvent.create({
       title: input.title,
       description: input.description,
+      type: input.type,
       capacity: input.capacity,
       registered_count: 0,
       is_active: input.isActive ?? true,

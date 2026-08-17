@@ -10,6 +10,10 @@ export const CreateWorkEventBody = {
       type: 'string',
       example: 'string',
     },
+    type: {
+      type: 'string',
+      example: 'string',
+    },
     capacity: {
       type: 'integer',
       example: 0,
