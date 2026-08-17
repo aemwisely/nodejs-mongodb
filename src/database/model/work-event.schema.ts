@@ -1,6 +1,4 @@
 import { model, Schema } from 'mongoose';
-import { trim } from 'zod';
-import { required } from 'zod/v4/core/util.cjs';
 
 export interface WorkEventDocument {
   title: string;

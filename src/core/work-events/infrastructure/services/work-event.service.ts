@@ -1,4 +1,5 @@
 import type { CreateWorkEventInput } from '../../application/dto/create-work-event.dto';
+import type { ListWorkEventsQuery } from '../../application/dto/list-work-events-query.dto';
 import { AbstractWorkEventService } from '../../application/services/work-event.service.abstract';
 import { WorkEventEntity } from '../../domain';
 import type { WorkEventRepository } from '../../domain/work-event.repository';
@@ -13,5 +14,20 @@ export class WorkEventService extends AbstractWorkEventService {
     return entity;
   }
 
-  async findAllAndCounted(): Promise<[WorkEventEntity[], number]> {}
+  async findAllAndCounted(query: ListWorkEventsQuery = {}): Promise<[WorkEventEntity[], number]> {
+    return this.workEventRepository.findManyAndCount(this.queryBuilder(query));
+  }
+
+  private queryBuilder(query: ListWorkEventsQuery): ListWorkEventsQuery {
+    const title = query.title?.trim();
+
+    return {
+      ...(title ? { title } : {}),
+      ...(typeof query.isActive === 'boolean' ? { isActive: query.isActive } : {}),
+      sortBy: query.sortBy,
+      sortDirection: query.sortDirection,
+      limit: query.limit,
+      offset: query.offset,
+    };
+  }
 }

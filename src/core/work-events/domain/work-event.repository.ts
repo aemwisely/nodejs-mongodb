@@ -11,5 +11,6 @@ export interface WorkEventSummary {
 export interface WorkEventRepository {
   create(input: CreateWorkEventInput): Promise<WorkEventEntity>;
   findMany(query: ListWorkEventsQuery): Promise<WorkEventEntity[]>;
+  findManyAndCount(query: ListWorkEventsQuery): Promise<[WorkEventEntity[], number]>;
   getSummary(): Promise<WorkEventSummary>;
 }

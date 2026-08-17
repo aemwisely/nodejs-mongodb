@@ -2,7 +2,7 @@ export type WorkEventSortBy = 'createdAt' | 'title' | 'capacity' | 'registeredCo
 export type SortDirection = 'asc' | 'desc';
 
 export interface ListWorkEventsQuery {
-  search?: string;
+  title?: string;
   isActive?: boolean;
   sortBy?: WorkEventSortBy;
   sortDirection?: SortDirection;

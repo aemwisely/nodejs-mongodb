@@ -1,8 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import type { CreateWorkEventInput } from '../../core/work-events';
 import { AbstractWorkEventService } from '../../core/work-events';
-import { BuildWorkEventInput } from '../../core/work-events/domain';
+import { BuildListWorkEventsQuery, BuildWorkEventInput } from '../../core/work-events/domain';
 
 export class WorkEventsController {
   constructor(private readonly workEventService: AbstractWorkEventService) {}
@@ -19,9 +18,10 @@ export class WorkEventsController {
     }
   };
 
-  findAllAndCounted = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  findAllAndCounted = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await this.workEventService.findAllAndCounted();
+      const query = BuildListWorkEventsQuery(req.query);
+      const result = await this.workEventService.findAllAndCounted(query);
 
       res.status(200).json(result);
     } catch (error) {

@@ -10,6 +10,8 @@ type WorkEventPersistenceDocument = WorkEventDocument & {
   _id: { toString(): string };
 };
 
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const toEntity = (document: WorkEventPersistenceDocument): WorkEventEntity =>
   WorkEventEntity.create({
     id: document._id.toString(),
@@ -37,17 +39,42 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
   }
 
   async findMany(query: ListWorkEventsQuery): Promise<WorkEventEntity[]> {
+    const { filter, sort, limit, offset } = this.buildQuery(query);
+
+    const documents = await WorkEvent.find(filter)
+      .sort(sort)
+      .skip(offset)
+      .limit(limit)
+      .exec();
+
+    return documents.map((document) => toEntity(document));
+  }
+
+  async findManyAndCount(query: ListWorkEventsQuery): Promise<[WorkEventEntity[], number]> {
+    const { filter, sort, limit, offset } = this.buildQuery(query);
+
+    const [documents, total] = await Promise.all([
+      WorkEvent.find(filter).sort(sort).skip(offset).limit(limit).exec(),
+      WorkEvent.countDocuments(filter).exec(),
+    ]);
+
+    return [documents.map((document) => toEntity(document)), total];
+  }
+
+  private buildQuery(query: ListWorkEventsQuery): {
+    filter: Record<string, unknown>;
+    sort: Record<string, SortOrder>;
+    limit: number;
+    offset: number;
+  } {
     const filter: Record<string, unknown> = {};
 
     if (typeof query.isActive === 'boolean') {
       filter.is_active = query.isActive;
     }
 
-    if (query.search) {
-      filter.$or = [
-        { title: { $regex: query.search, $options: 'i' } },
-        { description: { $regex: query.search, $options: 'i' } },
-      ];
+    if (query.title) {
+      filter.title = { $regex: escapeRegExp(query.title), $options: 'i' };
     }
 
     const sortFieldMap = {
@@ -62,13 +89,12 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
     const limit = Math.min(query.limit ?? 50, 100);
     const offset = query.offset ?? 0;
 
-    const documents = await WorkEvent.find(filter as never)
-      .sort({ [sortFieldMap[sortBy]]: sortDirection })
-      .skip(offset)
-      .limit(limit)
-      .exec();
-
-    return documents.map((document) => toEntity(document));
+    return {
+      filter,
+      sort: { [sortFieldMap[sortBy]]: sortDirection },
+      limit,
+      offset,
+    };
   }
 
   async getSummary(): Promise<WorkEventSummary> {
