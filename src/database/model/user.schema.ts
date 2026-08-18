@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose';
 import { softDeletePlugin, type SoftDeleteDocument } from '../plugins/soft-delete.plugin';
+import type { UserRole } from '../../core/user/domain';
 
 export interface UserDocument extends SoftDeleteDocument {
   firstName: string;
@@ -16,6 +17,7 @@ export interface UserDocument extends SoftDeleteDocument {
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date | null;
+  role: UserRole;
 }
 
 const userSchema = new Schema<UserDocument>(
@@ -24,6 +26,7 @@ const userSchema = new Schema<UserDocument>(
     last_name: { type: String, required: true, trim: true, alias: 'lastName' },
     phone_number: { type: String, required: true, trim: true, alias: 'phoneNumber' },
     is_active: { type: Boolean, required: true, default: true, alias: 'isActive' },
+    role: { type: String, required: true, enum: ['ADMIN', 'USER'], default: 'USER', alias: 'role' },
   },
   {
     collection: 'user',

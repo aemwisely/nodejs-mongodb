@@ -10,7 +10,7 @@ import type {
   RegistrationRepository,
   RegistrationUserRecord,
 } from '../../domain/registration.repository';
-import { UserEntity } from '../../../user/domain';
+import { UserEntity, type UserRole } from '../../../user/domain';
 
 type UserEventPersistenceDocument = UserEventDocument & {
   _id: { toString(): string };
@@ -22,6 +22,7 @@ type JoinedUserRecord = {
   last_name: string;
   phone_number: string;
   is_active: boolean;
+  role?: UserRole;
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date | null;
@@ -48,6 +49,7 @@ const toUserEntity = (document: JoinedUserRecord): UserEntity =>
     lastName: document.last_name,
     phoneNumber: document.phone_number,
     isActive: document.is_active,
+    role: document.role ?? 'USER',
     createdAt: document.created_at,
     updatedAt: document.updated_at,
     deletedAt: document.deleted_at ?? null,
@@ -76,6 +78,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
           last_name: user.lastName,
           phone_number: user.phoneNumber,
           is_active: true,
+          role: 'USER',
         },
       },
       { new: true, upsert: true },
@@ -108,6 +111,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
         last_name: '$user.last_name',
         phone_number: '$user.phone_number',
         is_active: '$user.is_active',
+        role: '$user.role',
         created_at: '$user.created_at',
         updated_at: '$user.updated_at',
         deleted_at: '$user.deleted_at',

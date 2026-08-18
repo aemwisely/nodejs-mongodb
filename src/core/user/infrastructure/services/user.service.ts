@@ -11,7 +11,7 @@ export class UserService extends AbstractUserService {
   }
 
   async createUser(dto: CreateUserInput): Promise<UserEntity> {
-    return this.userRepository.create(dto);
+    return this.userRepository.create({ ...dto, role: 'ADMIN' });
   }
 
   async findAllAndCounted(query: ListUsersQuery = {}): Promise<[UserEntity[], number]> {

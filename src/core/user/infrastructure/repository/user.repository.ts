@@ -21,6 +21,7 @@ const toEntity = (document: UserPersistenceDocument): UserEntity =>
     lastName: document.lastName,
     phoneNumber: document.phoneNumber,
     isActive: document.isActive,
+    role: document.role ?? 'USER',
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
     deletedAt: document.deletedAt ?? null,
@@ -34,6 +35,7 @@ export class MongooseUserRepository implements UserRepository {
         lastName: input.lastName,
         phoneNumber: input.phoneNumber,
         isActive: input.isActive ?? true,
+        role: input.role ?? 'USER',
       });
 
       return toEntity(document);
