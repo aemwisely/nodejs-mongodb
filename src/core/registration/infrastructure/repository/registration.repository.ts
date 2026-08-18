@@ -1,5 +1,6 @@
 import { CommonFilter } from '../../../../common';
 import { User, UserEvent, type UserEventDocument, WorkEvent } from '../../../../database';
+import { NOT_DELETED_FILTER } from '../../../../database/plugins/soft-delete.plugin';
 import { Types, type PipelineStage } from 'mongoose';
 import type { ListRegistrationUsersQuery } from '../../application/dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../../application/dto/register-event.dto';
@@ -23,6 +24,7 @@ type JoinedUserRecord = {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  deleted_at?: Date | null;
 };
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -36,6 +38,7 @@ const toEntity = (document: UserEventPersistenceDocument): RegistrationEntity =>
     checkoutAt: document.checkoutAt,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
+    deletedAt: document.deletedAt ?? null,
   });
 
 const toUserEntity = (document: JoinedUserRecord): UserEntity =>
@@ -47,11 +50,12 @@ const toUserEntity = (document: JoinedUserRecord): UserEntity =>
     isActive: document.is_active,
     createdAt: document.created_at,
     updatedAt: document.updated_at,
+    deletedAt: document.deleted_at ?? null,
   });
 
 export class MongooseRegistrationRepository implements RegistrationRepository {
   async findEventById(eventId: string): Promise<RegistrationEventRecord | null> {
-    const event = await WorkEvent.findById(new Types.ObjectId(eventId)).exec();
+    const event = await WorkEvent.findOne({ _id: new Types.ObjectId(eventId), ...NOT_DELETED_FILTER }).exec();
 
     if (!event) {
       return null;
@@ -65,7 +69,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
 
   async findOrCreateUserByPhoneNumber(user: RegisterEventInput['user']): Promise<RegistrationUserRecord> {
     const document = await User.findOneAndUpdate(
-      { phone_number: user.phoneNumber },
+      { phone_number: user.phoneNumber, ...NOT_DELETED_FILTER },
       {
         $setOnInsert: {
           first_name: user.firstName,
@@ -106,6 +110,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
         is_active: '$user.is_active',
         created_at: '$user.created_at',
         updated_at: '$user.updated_at',
+        deleted_at: '$user.deleted_at',
       },
     });
 
@@ -122,6 +127,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
       {
         _id: new Types.ObjectId(eventId),
         is_active: true,
+        ...NOT_DELETED_FILTER,
         $expr: { $lt: ['$registered_count', '$capacity'] },
       },
       [
@@ -143,7 +149,10 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
   }
 
   async deleteRegistrationById(registrationId: string): Promise<void> {
-    await UserEvent.deleteOne({ _id: new Types.ObjectId(registrationId) }).exec();
+    await UserEvent.updateOne(
+      { _id: new Types.ObjectId(registrationId), ...NOT_DELETED_FILTER },
+      { $set: { deleted_at: new Date() } },
+    ).exec();
   }
 
   isDuplicateRegistrationError(error: unknown): boolean {
@@ -162,7 +171,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
   } {
     const commonFilter = new CommonFilter(query);
     const pipeline: PipelineStage[] = [
-      { $match: { event_id: new Types.ObjectId(eventId) } },
+      { $match: { event_id: new Types.ObjectId(eventId), ...NOT_DELETED_FILTER } },
       {
         $lookup: {
           from: 'user',
@@ -172,6 +181,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
         },
       },
       { $unwind: '$user' },
+      { $match: { 'user.deleted_at': null } },
     ];
 
     if (typeof query.isActive === 'boolean') {

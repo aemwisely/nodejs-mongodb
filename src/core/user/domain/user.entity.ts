@@ -6,6 +6,7 @@ export interface UserProps {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
 }
 
 export interface UserResponse {
@@ -16,6 +17,7 @@ export interface UserResponse {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  deleted_at?: Date | null;
 }
 
 export class UserEntity {
@@ -53,6 +55,10 @@ export class UserEntity {
     return this.props.updatedAt;
   }
 
+  get deletedAt(): Date | null | undefined {
+    return this.props.deletedAt;
+  }
+
   toJSON(): UserResponse {
     return {
       id: this.id,
@@ -62,6 +68,7 @@ export class UserEntity {
       is_active: this.isActive,
       created_at: this.createdAt,
       updated_at: this.updatedAt,
+      deleted_at: this.deletedAt,
     };
   }
 }

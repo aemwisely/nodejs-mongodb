@@ -2,6 +2,7 @@ import { CommonFilter, BadRequestException } from '../../../../common';
 import type { SortOrder } from 'mongoose';
 
 import { User, type UserDocument } from '../../../../database/model';
+import { NOT_DELETED_FILTER } from '../../../../database/plugins/soft-delete.plugin';
 import type { CreateUserInput } from '../../application/dto/create-user.dto';
 import type { ListUsersQuery } from '../../application/dto/list-users-query.dto';
 import { UserEntity } from '../../domain/user.entity';
@@ -22,6 +23,7 @@ const toEntity = (document: UserPersistenceDocument): UserEntity =>
     isActive: document.isActive,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
+    deletedAt: document.deletedAt ?? null,
   });
 
 export class MongooseUserRepository implements UserRepository {
@@ -67,7 +69,7 @@ export class MongooseUserRepository implements UserRepository {
     offset: number;
     pagination: boolean;
   } {
-    const filter: Record<string, unknown> = {};
+    const filter: Record<string, unknown> = { ...NOT_DELETED_FILTER };
     const commonFilter = new CommonFilter(query);
 
     if (typeof query.isActive === 'boolean') {

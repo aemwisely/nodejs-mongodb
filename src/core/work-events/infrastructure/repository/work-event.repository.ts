@@ -2,6 +2,7 @@ import { CommonFilter } from '../../../../common';
 import { isValidObjectId, type SortOrder } from 'mongoose';
 
 import { WorkEvent, type WorkEventDocument } from '../../../../database/model';
+import { NOT_DELETED_FILTER } from '../../../../database/plugins/soft-delete.plugin';
 import type { CreateWorkEventInput } from '../../application/dto/create-work-event.dto';
 import type { ListWorkEventsQuery } from '../../application/dto/list-work-events-query.dto';
 import { WorkEventEntity } from '../../domain/work-event.entity';
@@ -24,6 +25,7 @@ const toEntity = (document: WorkEventPersistenceDocument): WorkEventEntity =>
     isActive: document.isActive,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
+    deletedAt: document.deletedAt ?? null,
   });
 
 export class MongooseWorkEventRepository implements WorkEventRepository {
@@ -75,7 +77,7 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
       return null;
     }
 
-    const document = await WorkEvent.findById(id).exec();
+    const document = await WorkEvent.findOne({ _id: id, ...NOT_DELETED_FILTER }).exec();
 
     return document ? toEntity(document) : null;
   }
@@ -87,7 +89,7 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
     offset: number;
     pagination: boolean;
   } {
-    const filter: Record<string, unknown> = {};
+    const filter: Record<string, unknown> = { ...NOT_DELETED_FILTER };
     const commonFilter = new CommonFilter(query);
 
     if (typeof query.isActive === 'boolean') {
@@ -121,7 +123,7 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
 
   async getSummary(): Promise<WorkEventSummary> {
     const [summary] = await WorkEvent.aggregate<WorkEventSummary>([
-      { $match: { is_active: true } },
+      { $match: { is_active: true, ...NOT_DELETED_FILTER } },
       {
         $group: {
           _id: null,

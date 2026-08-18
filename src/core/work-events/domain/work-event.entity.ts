@@ -8,6 +8,7 @@ export interface WorkEventProps {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
 }
 
 export interface WorkEventResponse {
@@ -21,6 +22,7 @@ export interface WorkEventResponse {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  deleted_at?: Date | null;
 }
 
 export class WorkEventEntity {
@@ -70,6 +72,10 @@ export class WorkEventEntity {
     return this.props.updatedAt;
   }
 
+  get deletedAt(): Date | null | undefined {
+    return this.props.deletedAt;
+  }
+
   toJSON(): WorkEventResponse {
     return {
       id: this.id,
@@ -82,6 +88,7 @@ export class WorkEventEntity {
       is_active: this.isActive,
       created_at: this.createdAt,
       updated_at: this.updatedAt,
+      deleted_at: this.deletedAt,
     };
   }
 }

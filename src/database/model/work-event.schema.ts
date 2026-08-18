@@ -1,6 +1,7 @@
 import { model, Schema } from 'mongoose';
+import { softDeletePlugin, type SoftDeleteDocument } from '../plugins/soft-delete.plugin';
 
-export interface WorkEventDocument {
+export interface WorkEventDocument extends SoftDeleteDocument {
   title: string;
   description?: string | null;
   type: string;
@@ -9,10 +10,12 @@ export interface WorkEventDocument {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
   registered_count: number;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  deleted_at?: Date | null;
 }
 
 const workEventSchema = new Schema<WorkEventDocument>(
@@ -40,5 +43,7 @@ workEventSchema.virtual('createdAt').get(function getCreatedAt() {
 workEventSchema.virtual('updatedAt').get(function getUpdatedAt() {
   return this.updated_at;
 });
+
+workEventSchema.plugin(softDeletePlugin);
 
 export const WorkEvent = model<WorkEventDocument>('WorkEvent', workEventSchema);

@@ -6,6 +6,7 @@ export interface RegistrationProps {
   eventId: string;
   checkinAt?: Date | null;
   checkoutAt?: Date | null;
+  deletedAt?: Date | null;
 }
 
 export interface RegistrationResponse {
@@ -16,6 +17,7 @@ export interface RegistrationResponse {
   event_id: string;
   checkin_at?: Date | null;
   checkout_at?: Date | null;
+  deleted_at?: Date | null;
 }
 
 export class RegistrationEntity {
@@ -53,6 +55,10 @@ export class RegistrationEntity {
     return this.props.updatedAt;
   }
 
+  get deletedAt(): Date | null | undefined {
+    return this.props.deletedAt;
+  }
+
   toJSON(): RegistrationResponse {
     return {
       id: this.id,
@@ -62,6 +68,7 @@ export class RegistrationEntity {
       checkout_at: this.checkoutAt,
       created_at: this.createdAt,
       updated_at: this.updatedAt,
+      deleted_at: this.deletedAt,
     };
   }
 }
