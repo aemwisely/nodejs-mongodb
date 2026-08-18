@@ -17,6 +17,7 @@ export interface RegistrationRepository {
   findOrCreateUserByPhoneNumber(user: RegisterEventInput['user']): Promise<RegistrationUserRecord>;
   createRegistration(input: { userId: string; eventId: string }): Promise<RegistrationEntity>;
   findUsersByEventId(eventId: string, query: ListRegistrationUsersQuery): Promise<[UserEntity[], number]>;
+  existsUserEvent(input: { eventId: string; userId: string }): Promise<boolean>;
   reserveSeatIfAvailable(eventId: string): Promise<boolean>;
   deleteRegistrationById(registrationId: string): Promise<void>;
   isDuplicateRegistrationError(error: unknown): boolean;

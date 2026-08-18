@@ -21,6 +21,8 @@ export const createWorkEventsRouter = (): Router => {
    *     summary: List work events
    *     tags:
    *       - Work Events
+   *     security:
+   *       - bearerAuth: []
    *     parameters:
    *       - in: query
    *         name: title
@@ -49,7 +51,7 @@ export const createWorkEventsRouter = (): Router => {
    *       200:
    *         description: Work event list
    */
-  router.get('/', controller.findAllAndCounted);
+  router.get('/', ...applyRouteGuards(controller, 'findAllAndCounted'));
 
   /**
    * @swagger
@@ -58,6 +60,8 @@ export const createWorkEventsRouter = (): Router => {
    *     summary: Get users joined work event
    *     tags:
    *       - Work Events
+   *     security:
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -103,7 +107,7 @@ export const createWorkEventsRouter = (): Router => {
    *       404:
    *         description: Work event not found
    */
-  router.get('/:id/get-user-event', controller.findListUserJoinEvent);
+  router.get('/:id/get-user-event', ...applyRouteGuards(controller, 'findListUserJoinEvent'));
 
   /**
    * @swagger
@@ -112,6 +116,8 @@ export const createWorkEventsRouter = (): Router => {
    *     summary: Get work event by id
    *     tags:
    *       - Work Events
+   *     security:
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -124,7 +130,7 @@ export const createWorkEventsRouter = (): Router => {
    *       404:
    *         description: Work event not found
    */
-  router.get('/:id', controller.findById);
+  router.get('/:id', ...applyRouteGuards(controller, 'findById'));
 
   /**
    * @swagger

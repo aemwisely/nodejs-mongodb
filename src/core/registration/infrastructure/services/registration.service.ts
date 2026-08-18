@@ -1,10 +1,11 @@
-import { BadRequestException, CommonFilter, NotFoundException } from '../../../../common';
+import { BadRequestException, CommonFilter, ForbiddenException, NotFoundException } from '../../../../common';
 import { isValidObjectId } from 'mongoose';
 import type { ListRegistrationUsersQuery } from '../../application/dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../../application/dto/register-event.dto';
 import { AbstractRegistrationService } from '../../application/services/registration.service.abstract';
 import type { RegistrationEntity } from '../../domain';
 import type { RegistrationRepository } from '../../domain/registration.repository';
+import type { JwtPayload } from '../../../auth';
 import type { UserEntity } from '../../../user/domain';
 
 export class RegistrationService extends AbstractRegistrationService {
@@ -47,7 +48,11 @@ export class RegistrationService extends AbstractRegistrationService {
     return registration;
   }
 
-  async findListUserJoinEvent(eventId: string, query: ListRegistrationUsersQuery = {}): Promise<[UserEntity[], number]> {
+  async findListUserJoinEvent(
+    eventId: string,
+    query: ListRegistrationUsersQuery = {},
+    authUser?: JwtPayload,
+  ): Promise<[UserEntity[], number]> {
     this.validateEventId(eventId);
 
     const event = await this.registrationRepository.findEventById(eventId);
@@ -58,6 +63,8 @@ export class RegistrationService extends AbstractRegistrationService {
         error_message: 'Work event not found',
       });
     }
+
+    await this.validateCanListUserJoinEvent(event.id, authUser);
 
     return this.registrationRepository.findUsersByEventId(event.id, this.buildListQuery(query));
   }
@@ -93,6 +100,24 @@ export class RegistrationService extends AbstractRegistrationService {
       throw new BadRequestException({
         error_code: 'INVALID_EVENT_ID',
         error_message: 'Event id is invalid',
+      });
+    }
+  }
+
+  private async validateCanListUserJoinEvent(eventId: string, authUser?: JwtPayload): Promise<void> {
+    if (!authUser || authUser.role === 'ADMIN') {
+      return;
+    }
+
+    const isJoinedEvent = await this.registrationRepository.existsUserEvent({
+      eventId,
+      userId: authUser.id,
+    });
+
+    if (!isJoinedEvent) {
+      throw new ForbiddenException({
+        error_code: 'FORBIDDEN_RESOURCE',
+        error_message: "Can't access this resource",
       });
     }
   }

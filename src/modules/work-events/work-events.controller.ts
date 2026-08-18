@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import { CommonFilter, NotFoundException, Roles } from '../../common';
+import { type JwtPayload } from '../../core/auth';
 import { AbstractRegistrationService, BuildListRegistrationUsersQuery } from '../../core/registration';
 import { AbstractWorkEventService } from '../../core/work-events';
 import { BuildListWorkEventsQuery, BuildWorkEventInput } from '../../core/work-events/domain';
@@ -24,6 +25,7 @@ export class WorkEventsController {
     }
   };
 
+  @Roles(['ADMIN', 'USER'])
   findAllAndCounted = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const query = BuildListWorkEventsQuery(req.query);
@@ -36,6 +38,7 @@ export class WorkEventsController {
     }
   };
 
+  @Roles(['ADMIN', 'USER'])
   findById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -54,11 +57,12 @@ export class WorkEventsController {
     }
   };
 
+  @Roles(['ADMIN', 'USER'])
   findListUserJoinEvent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const query = BuildListRegistrationUsersQuery(req.query);
-      const [data, count] = await this.registrationService.findListUserJoinEvent(id, query);
+      const [data, count] = await this.registrationService.findListUserJoinEvent(id, query, req.user as JwtPayload);
       const response = new CommonFilter(query).toPaginatedResult(data, count);
 
       res.status(200).json(response);
