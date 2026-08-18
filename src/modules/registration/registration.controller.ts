@@ -10,6 +10,7 @@ export class RegistrationController {
     try {
       const eventId = Array.isArray(req.params.eventId) ? req.params.eventId[0] : req.params.eventId;
       const dto = BuildRegisterEventInput(eventId, req.body);
+
       const registration = await this.registrationService.registerEvent(dto);
 
       res.status(201).json({ result: registration });
