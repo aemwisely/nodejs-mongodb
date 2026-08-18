@@ -1,9 +1,11 @@
-import { BadRequestException, NotFoundException } from '../../../../common';
+import { BadRequestException, CommonFilter, NotFoundException } from '../../../../common';
 import { isValidObjectId } from 'mongoose';
+import type { ListRegistrationUsersQuery } from '../../application/dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../../application/dto/register-event.dto';
 import { AbstractRegistrationService } from '../../application/services/registration.service.abstract';
 import type { RegistrationEntity } from '../../domain';
 import type { RegistrationRepository } from '../../domain/registration.repository';
+import type { UserEntity } from '../../../user/domain';
 
 export class RegistrationService extends AbstractRegistrationService {
   constructor(private readonly registrationRepository: RegistrationRepository) {
@@ -45,6 +47,21 @@ export class RegistrationService extends AbstractRegistrationService {
     return registration;
   }
 
+  async findListUserJoinEvent(eventId: string, query: ListRegistrationUsersQuery = {}): Promise<[UserEntity[], number]> {
+    this.validateEventId(eventId);
+
+    const event = await this.registrationRepository.findEventById(eventId);
+
+    if (!event) {
+      throw new NotFoundException({
+        error_code: 'WORK_EVENT_NOT_FOUND',
+        error_message: 'Work event not found',
+      });
+    }
+
+    return this.registrationRepository.findUsersByEventId(event.id, this.buildListQuery(query));
+  }
+
   private async createRegistration(userId: string, eventId: string): Promise<RegistrationEntity> {
     try {
       return await this.registrationRepository.createRegistration({ userId, eventId });
@@ -61,12 +78,7 @@ export class RegistrationService extends AbstractRegistrationService {
   }
 
   private validateInput(dto: RegisterEventInput): void {
-    if (!isValidObjectId(dto.eventId)) {
-      throw new BadRequestException({
-        error_code: 'INVALID_EVENT_ID',
-        error_message: 'Event id is invalid',
-      });
-    }
+    this.validateEventId(dto.eventId);
 
     if (!dto.user.firstName.trim() || !dto.user.lastName.trim() || !dto.user.phoneNumber.trim()) {
       throw new BadRequestException({
@@ -74,5 +86,26 @@ export class RegistrationService extends AbstractRegistrationService {
         error_message: 'User first name, last name, and phone number are required',
       });
     }
+  }
+
+  private validateEventId(eventId: string): void {
+    if (!isValidObjectId(eventId)) {
+      throw new BadRequestException({
+        error_code: 'INVALID_EVENT_ID',
+        error_message: 'Event id is invalid',
+      });
+    }
+  }
+
+  private buildListQuery(query: ListRegistrationUsersQuery): ListRegistrationUsersQuery {
+    const filter = new CommonFilter(query);
+
+    return {
+      ...query,
+      page: filter.page,
+      limit: filter.limit,
+      pagination: filter.pagination,
+      name: query.name?.trim() || undefined,
+    };
   }
 }

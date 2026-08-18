@@ -1,5 +1,7 @@
+import { CommonFilter } from '../../../../common';
 import { User, UserEvent, type UserEventDocument, WorkEvent } from '../../../../database';
-import { Types } from 'mongoose';
+import { Types, type PipelineStage } from 'mongoose';
+import type { ListRegistrationUsersQuery } from '../../application/dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../../application/dto/register-event.dto';
 import { RegistrationEntity } from '../../domain/registration.entity';
 import type {
@@ -7,10 +9,23 @@ import type {
   RegistrationRepository,
   RegistrationUserRecord,
 } from '../../domain/registration.repository';
+import { UserEntity } from '../../../user/domain';
 
 type UserEventPersistenceDocument = UserEventDocument & {
   _id: { toString(): string };
 };
+
+type JoinedUserRecord = {
+  _id: Types.ObjectId;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+};
+
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const toEntity = (document: UserEventPersistenceDocument): RegistrationEntity =>
   RegistrationEntity.create({
@@ -21,6 +36,17 @@ const toEntity = (document: UserEventPersistenceDocument): RegistrationEntity =>
     checkoutAt: document.checkoutAt,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
+  });
+
+const toUserEntity = (document: JoinedUserRecord): UserEntity =>
+  UserEntity.create({
+    id: document._id.toString(),
+    firstName: document.first_name,
+    lastName: document.last_name,
+    phoneNumber: document.phone_number,
+    isActive: document.is_active,
+    createdAt: document.created_at,
+    updatedAt: document.updated_at,
   });
 
 export class MongooseRegistrationRepository implements RegistrationRepository {
@@ -63,6 +89,34 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
     return toEntity(document);
   }
 
+  async findUsersByEventId(eventId: string, query: ListRegistrationUsersQuery): Promise<[UserEntity[], number]> {
+    const { pipeline, sort, limit, offset, pagination } = this.buildFindUsersByEventIdQuery(eventId, query);
+    const documentsPipeline: PipelineStage[] = [...pipeline, { $sort: sort }];
+
+    if (pagination) {
+      documentsPipeline.push({ $skip: offset }, { $limit: limit });
+    }
+
+    documentsPipeline.push({
+      $project: {
+        _id: '$user._id',
+        first_name: '$user.first_name',
+        last_name: '$user.last_name',
+        phone_number: '$user.phone_number',
+        is_active: '$user.is_active',
+        created_at: '$user.created_at',
+        updated_at: '$user.updated_at',
+      },
+    });
+
+    const [documents, totalDocuments] = await Promise.all([
+      UserEvent.aggregate<JoinedUserRecord>(documentsPipeline).exec(),
+      UserEvent.aggregate<{ count: number }>([...pipeline, { $count: 'count' }]).exec(),
+    ]);
+
+    return [documents.map((document) => toUserEntity(document)), totalDocuments[0]?.count ?? 0];
+  }
+
   async reserveSeatIfAvailable(eventId: string): Promise<boolean> {
     const updatedEvent = await WorkEvent.findOneAndUpdate(
       {
@@ -94,5 +148,68 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
 
   isDuplicateRegistrationError(error: unknown): boolean {
     return !!error && typeof error === 'object' && 'code' in error && (error as { code: unknown }).code === 11000;
+  }
+
+  private buildFindUsersByEventIdQuery(
+    eventId: string,
+    query: ListRegistrationUsersQuery,
+  ): {
+    pipeline: PipelineStage[];
+    sort: Record<string, 1 | -1>;
+    limit: number;
+    offset: number;
+    pagination: boolean;
+  } {
+    const commonFilter = new CommonFilter(query);
+    const pipeline: PipelineStage[] = [
+      { $match: { event_id: new Types.ObjectId(eventId) } },
+      {
+        $lookup: {
+          from: 'user',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+    ];
+
+    if (typeof query.isActive === 'boolean') {
+      pipeline.push({ $match: { 'user.is_active': query.isActive } });
+    }
+
+    if (query.name) {
+      pipeline.push({
+        $match: {
+          $expr: {
+            $regexMatch: {
+              input: { $concat: ['$user.first_name', ' ', '$user.last_name'] },
+              regex: escapeRegExp(query.name),
+              options: 'i',
+            },
+          },
+        },
+      });
+    }
+
+    const sortFieldMap = {
+      createdAt: 'user.created_at',
+      firstName: 'user.first_name',
+      lastName: 'user.last_name',
+      phoneNumber: 'user.phone_number',
+    } as const;
+
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortDirection = query.sortDirection === 'asc' ? 1 : -1;
+    const limit = Math.min(commonFilter.limit, 100);
+    const offset = commonFilter.getOffset({ page: commonFilter.page, limit });
+
+    return {
+      pipeline,
+      sort: { [sortFieldMap[sortBy]]: sortDirection },
+      limit,
+      offset,
+      pagination: commonFilter.pagination,
+    };
   }
 }
