@@ -15,6 +15,8 @@ export const createUsersRouter = (): Router => {
    *     summary: List users
    *     tags:
    *       - Users
+   *     security:
+   *       - bearerAuth: []
    *     parameters:
    *       - in: query
    *         name: name
@@ -52,6 +54,8 @@ export const createUsersRouter = (): Router => {
    *     summary: Create user
    *     tags:
    *       - Users
+   *     security:
+   *       - bearerAuth: []
    *     requestBody:
    *       required: true
    *       content:
