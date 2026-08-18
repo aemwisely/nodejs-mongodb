@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { applyRouteGuards } from '../../common';
 import { createRegistrationModule } from '../../core/registration';
 import { createWorkEventsModule } from '../../core/work-events';
 import { WorkEventsController } from './work-events.controller';
@@ -132,6 +133,8 @@ export const createWorkEventsRouter = (): Router => {
    *     summary: Create work event
    *     tags:
    *       - Work Events
+   *     security:
+   *       - bearerAuth: []
    *     requestBody:
    *       required: true
    *       content:
@@ -141,8 +144,12 @@ export const createWorkEventsRouter = (): Router => {
    *     responses:
    *       201:
    *         description: Work event created
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden
    */
-  router.post('/', controller.createWorkEvent);
+  router.post('/', ...applyRouteGuards(controller, 'createWorkEvent'));
 
   return router;
 };

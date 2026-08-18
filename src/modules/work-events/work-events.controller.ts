@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { CommonFilter, NotFoundException } from '../../common';
+import { CommonFilter, NotFoundException, Roles } from '../../common';
 import { AbstractRegistrationService, BuildListRegistrationUsersQuery } from '../../core/registration';
 import { AbstractWorkEventService } from '../../core/work-events';
 import { BuildListWorkEventsQuery, BuildWorkEventInput } from '../../core/work-events/domain';
@@ -11,6 +11,7 @@ export class WorkEventsController {
     private readonly registrationService: AbstractRegistrationService,
   ) {}
 
+  @Roles(['ADMIN'])
   createWorkEvent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const dto = BuildWorkEventInput(req.body);
