@@ -1,3 +1,4 @@
+import type { JoinEventType } from '../dto/join-event.dto';
 import type { ListRegistrationUsersQuery } from '../dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../dto/register-event.dto';
 import type { RegistrationEntity } from '../../domain/registration.entity';
@@ -11,4 +12,6 @@ export abstract class AbstractRegistrationService {
     query?: ListRegistrationUsersQuery,
     authUser?: JwtPayload,
   ): Promise<[UserEntity[], number]>;
+
+  abstract handleJoinEvent(eventId: string, authUser: JwtPayload, type: JoinEventType): Promise<void>;
 }

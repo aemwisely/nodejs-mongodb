@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { jwtAuthGuard } from '../../common';
 import { createRegistrationModule } from '../../core/registration';
 import { RegistrationController } from './registration.controller';
 
@@ -39,10 +40,56 @@ export const createRegistrationRouter = (): Router => {
    *               phone_number:
    *                 type: string
    *     responses:
+   *       200:
+   *         description: User checked in to event
+   */
+  router.post('/:eventId', controller.registerEvent);
+
+  /**
+   * @swagger
+   * /api/v1/registrations/{eventId}/check-in:
+   *   post:
+   *     summary: Register user to work event
+   *     tags:
+   *       - Registrations
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: eventId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: User checked out from event
+   */
+  router.post('/:eventId/check-in', jwtAuthGuard, (req, res, next) =>
+    controller.handleJoiningEvent(req, res, next, 'CHECK-IN'),
+  );
+
+  /**
+   * @swagger
+   * /api/v1/registrations/{eventId}/check-out:
+   *   post:
+   *     summary: Register user to work event
+   *     tags:
+   *       - Registrations
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: eventId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
    *       201:
    *         description: User registered to event
    */
-  router.post('/:eventId', controller.registerEvent);
+  router.post('/:eventId/check-out', jwtAuthGuard, (req, res, next) =>
+    controller.handleJoiningEvent(req, res, next, 'CHECK-OUT'),
+  );
 
   return router;
 };

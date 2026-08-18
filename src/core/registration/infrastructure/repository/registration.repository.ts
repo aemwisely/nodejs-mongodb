@@ -2,6 +2,7 @@ import { CommonFilter } from '../../../../common';
 import { User, UserEvent, type UserEventDocument, WorkEvent } from '../../../../database';
 import { NOT_DELETED_FILTER } from '../../../../database/plugins/soft-delete.plugin';
 import { Types, type PipelineStage } from 'mongoose';
+import type { JoinEventType } from '../../application/dto/join-event.dto';
 import type { ListRegistrationUsersQuery } from '../../application/dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../../application/dto/register-event.dto';
 import { RegistrationEntity } from '../../domain/registration.entity';
@@ -134,6 +135,21 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
     }).exec();
 
     return !!document;
+  }
+
+  async updateUserEventJoinState(input: { eventId: string; userId: string; type: JoinEventType }): Promise<void> {
+    await UserEvent.updateOne(
+      {
+        event_id: new Types.ObjectId(input.eventId),
+        user_id: new Types.ObjectId(input.userId),
+        ...NOT_DELETED_FILTER,
+      },
+      {
+        $set: {
+          [input.type === 'CHECK-IN' ? 'checkin_at' : 'checkout_at']: new Date(),
+        },
+      },
+    ).exec();
   }
 
   async reserveSeatIfAvailable(eventId: string): Promise<boolean> {

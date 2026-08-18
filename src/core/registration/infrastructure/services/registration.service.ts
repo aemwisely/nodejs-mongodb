@@ -1,5 +1,6 @@
 import { BadRequestException, CommonFilter, ForbiddenException, NotFoundException } from '../../../../common';
 import { isValidObjectId } from 'mongoose';
+import type { JoinEventType } from '../../application/dto/join-event.dto';
 import type { ListRegistrationUsersQuery } from '../../application/dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../../application/dto/register-event.dto';
 import { AbstractRegistrationService } from '../../application/services/registration.service.abstract';
@@ -132,5 +133,21 @@ export class RegistrationService extends AbstractRegistrationService {
       pagination: filter.pagination,
       name: query.name?.trim() || undefined,
     };
+  }
+
+  async handleJoinEvent(eventId: string, authUser: JwtPayload, type: JoinEventType): Promise<void> {
+    this.validateEventId(eventId);
+
+    const event = await this.registrationRepository.findEventById(eventId);
+
+    if (!event) {
+      throw new NotFoundException({
+        error_code: 'WORK_EVENT_NOT_FOUND',
+        error_message: 'Work event not found',
+      });
+    }
+
+    await this.validateCanListUserJoinEvent(event.id, authUser);
+    await this.registrationRepository.updateUserEventJoinState({ eventId: event.id, userId: authUser.id, type });
   }
 }

@@ -1,3 +1,4 @@
+import type { JoinEventType } from '../application/dto/join-event.dto';
 import type { ListRegistrationUsersQuery } from '../application/dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../application/dto/register-event.dto';
 import type { UserEntity } from '../../user/domain';
@@ -18,6 +19,7 @@ export interface RegistrationRepository {
   createRegistration(input: { userId: string; eventId: string }): Promise<RegistrationEntity>;
   findUsersByEventId(eventId: string, query: ListRegistrationUsersQuery): Promise<[UserEntity[], number]>;
   existsUserEvent(input: { eventId: string; userId: string }): Promise<boolean>;
+  updateUserEventJoinState(input: { eventId: string; userId: string; type: JoinEventType }): Promise<void>;
   reserveSeatIfAvailable(eventId: string): Promise<boolean>;
   deleteRegistrationById(registrationId: string): Promise<void>;
   isDuplicateRegistrationError(error: unknown): boolean;
