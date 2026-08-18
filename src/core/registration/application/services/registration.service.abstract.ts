@@ -3,7 +3,7 @@ import type { ListRegistrationUsersQuery } from '../dto/list-registration-users-
 import type { RegisterEventInput } from '../dto/register-event.dto';
 import type { RegistrationEntity } from '../../domain/registration.entity';
 import type { JwtPayload } from '../../../auth';
-import type { UserEntity } from '../../../user/domain';
+import type { JoinedUserEventEntity } from '../../domain';
 
 export abstract class AbstractRegistrationService {
   abstract registerEvent(dto: RegisterEventInput): Promise<RegistrationEntity>;
@@ -11,7 +11,7 @@ export abstract class AbstractRegistrationService {
     eventId: string,
     query?: ListRegistrationUsersQuery,
     authUser?: JwtPayload,
-  ): Promise<[UserEntity[], number]>;
+  ): Promise<[JoinedUserEventEntity[], number]>;
 
   abstract handleJoinEvent(eventId: string, authUser: JwtPayload, type: JoinEventType): Promise<void>;
 }

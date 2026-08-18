@@ -4,10 +4,9 @@ import type { JoinEventType } from '../../application/dto/join-event.dto';
 import type { ListRegistrationUsersQuery } from '../../application/dto/list-registration-users-query.dto';
 import type { RegisterEventInput } from '../../application/dto/register-event.dto';
 import { AbstractRegistrationService } from '../../application/services/registration.service.abstract';
-import type { RegistrationEntity } from '../../domain';
+import type { JoinedUserEventEntity, RegistrationEntity } from '../../domain';
 import type { RegistrationRepository } from '../../domain/registration.repository';
 import type { JwtPayload } from '../../../auth';
-import type { UserEntity } from '../../../user/domain';
 
 export class RegistrationService extends AbstractRegistrationService {
   constructor(private readonly registrationRepository: RegistrationRepository) {
@@ -53,7 +52,7 @@ export class RegistrationService extends AbstractRegistrationService {
     eventId: string,
     query: ListRegistrationUsersQuery = {},
     authUser?: JwtPayload,
-  ): Promise<[UserEntity[], number]> {
+  ): Promise<[JoinedUserEventEntity[], number]> {
     this.validateEventId(eventId);
 
     const event = await this.registrationRepository.findEventById(eventId);

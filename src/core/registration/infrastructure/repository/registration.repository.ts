@@ -11,7 +11,8 @@ import type {
   RegistrationRepository,
   RegistrationUserRecord,
 } from '../../domain/registration.repository';
-import { UserEntity, type UserRole } from '../../../user/domain';
+import { JoinedUserEventEntity } from '../../domain/joined-user-event.entity';
+import type { UserRole } from '../../../user/domain';
 
 type UserEventPersistenceDocument = UserEventDocument & {
   _id: { toString(): string };
@@ -27,6 +28,8 @@ type JoinedUserRecord = {
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date | null;
+  checkin_at?: Date | null;
+  checkout_at?: Date | null;
 };
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -43,8 +46,8 @@ const toEntity = (document: UserEventPersistenceDocument): RegistrationEntity =>
     deletedAt: document.deletedAt ?? null,
   });
 
-const toUserEntity = (document: JoinedUserRecord): UserEntity =>
-  UserEntity.create({
+const toJoinedUserEventEntity = (document: JoinedUserRecord): JoinedUserEventEntity =>
+  JoinedUserEventEntity.create({
     id: document._id.toString(),
     firstName: document.first_name,
     lastName: document.last_name,
@@ -54,6 +57,8 @@ const toUserEntity = (document: JoinedUserRecord): UserEntity =>
     createdAt: document.created_at,
     updatedAt: document.updated_at,
     deletedAt: document.deleted_at ?? null,
+    checkinAt: document.checkin_at ?? null,
+    checkoutAt: document.checkout_at ?? null,
   });
 
 export class MongooseRegistrationRepository implements RegistrationRepository {
@@ -97,7 +102,10 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
     return toEntity(document);
   }
 
-  async findUsersByEventId(eventId: string, query: ListRegistrationUsersQuery): Promise<[UserEntity[], number]> {
+  async findUsersByEventId(
+    eventId: string,
+    query: ListRegistrationUsersQuery,
+  ): Promise<[JoinedUserEventEntity[], number]> {
     const { pipeline, sort, limit, offset, pagination } = this.buildFindUsersByEventIdQuery(eventId, query);
     const documentsPipeline: PipelineStage[] = [...pipeline, { $sort: sort }];
 
@@ -116,6 +124,8 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
         created_at: '$user.created_at',
         updated_at: '$user.updated_at',
         deleted_at: '$user.deleted_at',
+        checkin_at: '$checkin_at',
+        checkout_at: '$checkout_at',
       },
     });
 
@@ -124,7 +134,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
       UserEvent.aggregate<{ count: number }>([...pipeline, { $count: 'count' }]).exec(),
     ]);
 
-    return [documents.map((document) => toUserEntity(document)), totalDocuments[0]?.count ?? 0];
+    return [documents.map((document) => toJoinedUserEventEntity(document)), totalDocuments[0]?.count ?? 0];
   }
 
   async existsUserEvent(input: { eventId: string; userId: string }): Promise<boolean> {
