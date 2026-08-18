@@ -6,10 +6,25 @@ import { AbstractAuthService } from '../../application/services/auth.service.abs
 import { AuthTokenEntity, type JwtPayload } from '../../domain';
 import type { LoginInput } from '../../application/dto/login.dto';
 import type { AuthRepository } from '../../domain/auth.repository';
+import { UserEntity, UserRepository } from '../../../user';
 
-export class AuthService extends AbstractAuthService {
-  constructor(private readonly authRepository: AuthRepository) {
-    super();
+export class AuthService implements AbstractAuthService {
+  constructor(
+    private readonly authRepository: AuthRepository,
+    private readonly userRepository: UserRepository,
+  ) {}
+
+  async getMe(user: Express.User): Promise<UserEntity> {
+    const findUserEntity = await this.userRepository.findOneById(user.id);
+
+    if (!findUserEntity) {
+      throw new UnauthorizedException({
+        error_code: 'INVALID_CREDENTIALS',
+        error_message: 'Invalid phone number',
+      });
+    }
+
+    return findUserEntity;
   }
 
   async login(dto: LoginInput): Promise<AuthTokenEntity> {

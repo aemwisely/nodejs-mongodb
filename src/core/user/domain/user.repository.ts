@@ -5,4 +5,5 @@ import type { UserEntity } from './user.entity';
 export interface UserRepository {
   create(input: CreateUserInput): Promise<UserEntity>;
   findManyAndCount(query: ListUsersQuery): Promise<[UserEntity[], number]>;
+  findOneById(id: string): Promise<UserEntity | null>;
 }

@@ -51,6 +51,16 @@ export class MongooseUserRepository implements UserRepository {
     }
   }
 
+  async findOneById(id: string): Promise<UserEntity | null> {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return null;
+    }
+
+    return toEntity(user);
+  }
+
   async findManyAndCount(query: ListUsersQuery): Promise<[UserEntity[], number]> {
     const { filter, sort, limit, offset, pagination } = this.buildQuery(query);
     const documentsQuery = User.find(filter).sort(sort);
