@@ -34,6 +34,8 @@ const envSchema = z.object({
   MONGODB_PASSWORD: z.preprocess(emptyStringToUndefined, z.string().optional()),
   MONGODB_AUTH_SOURCE: z.string().min(1).default("admin"),
   AUTO_INIT_DATABASE: z.preprocess(stringToBoolean, z.boolean()).default(false),
+  JWT_SECRET: z.string().min(1, "JWT_SECRET is required").default("change-me"),
+  JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: z.coerce.number().int().positive().default(3600),
 }).superRefine((value, context) => {
   if (Boolean(value.MONGODB_USERNAME) !== Boolean(value.MONGODB_PASSWORD)) {
     context.addIssue({

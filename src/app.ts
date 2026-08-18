@@ -1,8 +1,16 @@
 import express from 'express';
-import { allExceptionsFilter, corsOptions, NotFoundException, setupSwagger, transformInterceptor } from './common';
+import {
+  allExceptionsFilter,
+  configureJwtStrategy,
+  corsOptions,
+  NotFoundException,
+  setupSwagger,
+  transformInterceptor,
+} from './common';
 import { appConfig, getAppUrl } from './config/app.config';
 import { apiRoutes } from './routes';
 import cors from 'cors';
+import passport from 'passport';
 
 type ExpressAppWithUrl = ReturnType<typeof express> & {
   getUrl: () => string;
@@ -11,10 +19,12 @@ type ExpressAppWithUrl = ReturnType<typeof express> & {
 export const app = express() as ExpressAppWithUrl;
 
 app.getUrl = getAppUrl;
+configureJwtStrategy();
 
 app.use(express.json());
 app.use(transformInterceptor);
 app.use(cors(corsOptions));
+app.use(passport.initialize());
 
 setupSwagger(app, {
   serverName: 'Example API',
