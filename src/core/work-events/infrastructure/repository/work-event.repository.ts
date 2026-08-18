@@ -5,6 +5,7 @@ import { WorkEvent, type WorkEventDocument } from '../../../../database/model';
 import { NOT_DELETED_FILTER } from '../../../../database/plugins/soft-delete.plugin';
 import type { CreateWorkEventInput } from '../../application/dto/create-work-event.dto';
 import type { ListWorkEventsQuery } from '../../application/dto/list-work-events-query.dto';
+import type { UpdateWorkEventDto } from '../../application/dto/update-work-event.dto';
 import { WorkEventEntity } from '../../domain/work-event.entity';
 import type { WorkEventRepository, WorkEventSummary } from '../../domain/work-event.repository';
 
@@ -40,6 +41,42 @@ export class MongooseWorkEventRepository implements WorkEventRepository {
     });
 
     return toEntity(document);
+  }
+
+  async update(input: UpdateWorkEventDto): Promise<WorkEventEntity | null> {
+    if (!isValidObjectId(input.eventId)) {
+      return null;
+    }
+
+    const update: Record<string, unknown> = {};
+
+    if (input.title !== undefined) {
+      update.title = input.title;
+    }
+
+    if (input.description !== undefined) {
+      update.description = input.description;
+    }
+
+    if (input.type !== undefined) {
+      update.type = input.type;
+    }
+
+    if (input.capacity !== undefined) {
+      update.capacity = input.capacity;
+    }
+
+    if (input.isActive !== undefined) {
+      update.is_active = input.isActive;
+    }
+
+    const document = await WorkEvent.findOneAndUpdate(
+      { _id: input.eventId, ...NOT_DELETED_FILTER },
+      { $set: update },
+      { new: true },
+    ).exec();
+
+    return document ? toEntity(document) : null;
   }
 
   async findMany(query: ListWorkEventsQuery): Promise<WorkEventEntity[]> {

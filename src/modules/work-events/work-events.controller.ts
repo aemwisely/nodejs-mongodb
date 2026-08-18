@@ -4,7 +4,7 @@ import { CommonFilter, NotFoundException, Roles } from '../../common';
 import { type JwtPayload } from '../../core/auth';
 import { AbstractRegistrationService, BuildListRegistrationUsersQuery } from '../../core/registration';
 import { AbstractWorkEventService } from '../../core/work-events';
-import { BuildListWorkEventsQuery, BuildWorkEventInput } from '../../core/work-events/domain';
+import { BuildListWorkEventsQuery, BuildWorkEventInput, BuildWorkEventUpdateBody } from '../../core/work-events/domain';
 
 export class WorkEventsController {
   constructor(
@@ -20,6 +20,20 @@ export class WorkEventsController {
       const workEvent = await this.workEventService.createWorkEvent(dto);
 
       res.status(201).json({ result: workEvent });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  @Roles(['ADMIN'])
+  updateWorkEvent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const eventId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const dto = BuildWorkEventUpdateBody(eventId, req.body);
+
+      const workEvent = await this.workEventService.updateWorkEvent(dto);
+
+      res.status(200).json({ result: workEvent });
     } catch (error) {
       next(error);
     }

@@ -157,5 +157,40 @@ export const createWorkEventsRouter = (): Router => {
    */
   router.post('/', ...applyRouteGuards(controller, 'createWorkEvent'));
 
+  /**
+   * @swagger
+   * /api/v1/work-events/{id}:
+   *   patch:
+   *     summary: Update work event
+   *     tags:
+   *       - Work Events
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/UpdateWorkEventBody'
+   *     responses:
+   *       200:
+   *         description: Work event updated
+   *       400:
+   *         description: Invalid update payload
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden
+   *       404:
+   *         description: Work event not found
+   */
+  router.patch('/:id', ...applyRouteGuards(controller, 'updateWorkEvent'));
+
   return router;
 };
