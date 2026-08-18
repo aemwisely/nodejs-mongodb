@@ -146,7 +146,7 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
           },
         },
       ],
-      { new: true },
+      { new: true, updatePipeline: true },
     ).exec();
 
     return !!updatedEvent;
