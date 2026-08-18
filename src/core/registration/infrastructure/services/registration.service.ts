@@ -146,7 +146,28 @@ export class RegistrationService extends AbstractRegistrationService {
       });
     }
 
-    await this.validateCanListUserJoinEvent(event.id, authUser);
+    const registration = await this.getUserEventRegistration(event.id, authUser.id);
+
+    if (type === 'CHECK-OUT' && !registration.checkinAt) {
+      throw new BadRequestException({
+        error_code: 'USER_EVENT_CHECKIN_REQUIRED',
+        error_message: 'User must check in before check out',
+      });
+    }
+
     await this.registrationRepository.updateUserEventJoinState({ eventId: event.id, userId: authUser.id, type });
+  }
+
+  private async getUserEventRegistration(eventId: string, userId: string): Promise<RegistrationEntity> {
+    const registration = await this.registrationRepository.findRegistrationByUserAndEvent({ eventId, userId });
+
+    if (!registration) {
+      throw new ForbiddenException({
+        error_code: 'FORBIDDEN_RESOURCE',
+        error_message: "Can't access this resource",
+      });
+    }
+
+    return registration;
   }
 }

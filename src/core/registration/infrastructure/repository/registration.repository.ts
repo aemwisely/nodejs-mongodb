@@ -137,6 +137,19 @@ export class MongooseRegistrationRepository implements RegistrationRepository {
     return [documents.map((document) => toJoinedUserEventEntity(document)), totalDocuments[0]?.count ?? 0];
   }
 
+  async findRegistrationByUserAndEvent(input: {
+    eventId: string;
+    userId: string;
+  }): Promise<RegistrationEntity | null> {
+    const document = await UserEvent.findOne({
+      event_id: new Types.ObjectId(input.eventId),
+      user_id: new Types.ObjectId(input.userId),
+      ...NOT_DELETED_FILTER,
+    }).exec();
+
+    return document ? toEntity(document) : null;
+  }
+
   async existsUserEvent(input: { eventId: string; userId: string }): Promise<boolean> {
     const document = await UserEvent.exists({
       event_id: new Types.ObjectId(input.eventId),

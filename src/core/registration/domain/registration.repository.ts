@@ -17,6 +17,7 @@ export interface RegistrationRepository {
   findEventById(eventId: string): Promise<RegistrationEventRecord | null>;
   findOrCreateUserByPhoneNumber(user: RegisterEventInput['user']): Promise<RegistrationUserRecord>;
   createRegistration(input: { userId: string; eventId: string }): Promise<RegistrationEntity>;
+  findRegistrationByUserAndEvent(input: { eventId: string; userId: string }): Promise<RegistrationEntity | null>;
   findUsersByEventId(eventId: string, query: ListRegistrationUsersQuery): Promise<[JoinedUserEventEntity[], number]>;
   existsUserEvent(input: { eventId: string; userId: string }): Promise<boolean>;
   updateUserEventJoinState(input: { eventId: string; userId: string; type: JoinEventType }): Promise<void>;
