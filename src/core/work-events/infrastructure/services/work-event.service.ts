@@ -35,10 +35,7 @@ export class WorkEventService extends AbstractWorkEventService {
       });
     }
 
-    if (
-      typeof updatePayload.capacity === 'number' &&
-      updatePayload.capacity < workEvent.registeredCount
-    ) {
+    if (typeof updatePayload.capacity === 'number' && updatePayload.capacity < workEvent.registeredCount) {
       throw new BadRequestException({
         error_code: 'WORK_EVENT_CAPACITY_LESS_THAN_REGISTERED',
         error_message: 'Capacity cannot be less than registered count',

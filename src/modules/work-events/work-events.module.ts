@@ -21,8 +21,6 @@ export const createWorkEventsRouter = (): Router => {
    *     summary: List work events
    *     tags:
    *       - Work Events
-   *     security:
-   *       - bearerAuth: []
    *     parameters:
    *       - in: query
    *         name: title
@@ -51,7 +49,7 @@ export const createWorkEventsRouter = (): Router => {
    *       200:
    *         description: Work event list
    */
-  router.get('/', ...applyRouteGuards(controller, 'findAllAndCounted'));
+  router.get('/', controller.findAllAndCounted);
 
   /**
    * @swagger

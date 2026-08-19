@@ -39,7 +39,6 @@ export class WorkEventsController {
     }
   };
 
-  @Roles(['ADMIN', 'USER'])
   findAllAndCounted = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const query = BuildListWorkEventsQuery(req.query);

@@ -11,6 +11,7 @@ import { appConfig, getAppUrl } from './config/app.config';
 import { apiRoutes } from './routes';
 import cors from 'cors';
 import passport from 'passport';
+import morgan from 'morgan';
 
 type ExpressAppWithUrl = ReturnType<typeof express> & {
   getUrl: () => string;
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use(transformInterceptor);
 app.use(cors(corsOptions));
 app.use(passport.initialize());
+app.use(morgan('dev'));
 
 setupSwagger(app, {
   serverName: 'Example API',
